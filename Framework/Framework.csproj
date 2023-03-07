@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>$(AssemblyName)</PackageId>
+	<Version>1.0.0</Version>
+    <AssemblyName>Semifinals.Framework</AssemblyName>
+    <RootNamespace>Semifinals.Framework</RootNamespace>
+    <Company>Semifinals</Company>
+    <Product>Framework</Product>
+    <Authors>Finley Sherwood</Authors>
+    <Description>A simple .NET framework to build microservices in the Azure ecosystem for the Semifinals API.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+</Project>
