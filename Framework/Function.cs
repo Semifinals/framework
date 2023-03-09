@@ -1,6 +1,7 @@
 ﻿using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Semifinals.Framework.Services.Jwt;
 
@@ -70,7 +71,10 @@ public class Function<T> where T : Dto
         {
             // Read body of request
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            JObject body = JObject.Parse(requestBody);
+            JObject body = JsonConvert.DeserializeObject<JObject>(requestBody, new JsonSerializerSettings
+            {
+                DateParseHandling = DateParseHandling.None
+            });
             T parsedBody = body.ToObject<T>();
 
             // Validate DTO
