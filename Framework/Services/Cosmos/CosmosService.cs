@@ -157,11 +157,11 @@ public class CosmosService : IDisposable
     public async Task<T> PatchItemAsync<T>(
         Container container,
         string id,
-        PartitionKey partitionKey,
+        string partitionKey,
         IReadOnlyList<PatchOperation> operations)
         where T : CosmosItem
     {
-        ItemResponse<T> response = await container.PatchItemAsync<T>(id, partitionKey, operations);
+        ItemResponse<T> response = await container.PatchItemAsync<T>(id, new(partitionKey), operations);
         RequestCharge += response.RequestCharge;
         return response.Resource;
     }
@@ -174,13 +174,13 @@ public class CosmosService : IDisposable
     /// <param name="id">The ID for the item to delete</param>
     /// <param name="partitionKey">The partition key for the item to delete</param>
     /// <returns>The deleted item</returns>
-    public async Task<T> DeleteItemAsync<T>(
+    public async Task<T?> DeleteItemAsync<T>(
         Container container,
         string id,
-        PartitionKey partitionKey)
+        string partitionKey)
         where T : CosmosItem
     {
-        ItemResponse<T> response = await container.DeleteItemAsync<T>(id, partitionKey);
+        ItemResponse<T> response = await container.DeleteItemAsync<T>(id, new(partitionKey));
         RequestCharge += response.RequestCharge;
         return response.Resource;
     }

@@ -1,6 +1,9 @@
 ﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Semifinals.Framework.Services.Cosmos;
+using Semifinals.Framework.Testing;
 
 namespace IdentityService.Tests.E2E.Services.Cosmos;
 
@@ -12,7 +15,13 @@ public class CosmosServiceTests
     [TestInitialize]
     public void TestInitialize()
     {
-        Service = new("DB CONNECTION STRING IS NEEDED HERE");
+        var config = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        Service = new(config.GetValue<string>("DbConnectionString"));
     }
 
     [TestMethod]
@@ -60,80 +69,304 @@ public class CosmosServiceTests
     }
 
     [TestMethod]
-    [Ignore]
     public async Task CreateItemAsync_CreatesItem()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+
+        // Act
+        TestItem res = await Service.CreateItemAsync(container, item, item.Id);
+
+        // Assert
+        Assert.AreEqual(item.Id, res.Id);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task UpsertItemAsync_CreatesItem()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+
+        // Act
+        TestItem res = await Service.UpsertItemAsync(container, item, item.Id);
+
+        // Assert
+        Assert.AreEqual(item.Id, res.Id);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task UpsertItemAsync_UpdatesItem()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+        await Service.CreateItemAsync(container, item, item.Id);
+
+        item.Name = "Daniel";
+
+        // Act
+        TestItem res = await Service.UpsertItemAsync(container, item, item.Id);
+
+        // Assert
+        Assert.AreEqual(item.Id, res.Id);
+        Assert.AreEqual("Daniel", res.Name);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task ReadItemAsync_ReadsExisting()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+        await Service.CreateItemAsync(container, item, item.Id);
+
+        // Act
+        TestItem res = await Service.ReadItemAsync<TestItem>(container, item.Id, item.Id);
+
+        // Assert
+        Assert.AreEqual(item.Id, res.Id);
+        Assert.AreEqual(item.Name, res.Name);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task ReadItemAsync_ReadsNonExisting()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+
+        // Act
+        async Task<TestItem> res() => await Service.ReadItemAsync<TestItem>(container, item.Id, item.Id);
+
+        // Assert
+        await Assert.ThrowsExceptionAsync<CosmosException>(res);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task ReadManyItemsAsync_ReadsExisting()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item1 = new(Test.GenerateRandomString(), "Finley");
+        await Service.CreateItemAsync(container, item1, item1.Id);
+        TestItem item2 = new(Test.GenerateRandomString(), "Daniel");
+        await Service.CreateItemAsync(container, item2, item2.Id);
+
+        List<(string, PartitionKey)> items = new()
+        {
+            (item1.Id, new(item1.Id)),
+            (item2.Id, new(item2.Id))
+        };
+
+        // Act
+        IEnumerable<TestItem> res = await Service.ReadManyItemsAsync<TestItem>(container, items);
+
+        // Assert
+        Assert.AreEqual(2, res.Count());
+        Assert.IsTrue(res.Any(i => i.Id == item1.Id));
+        Assert.IsTrue(res.Any(i => i.Id == item2.Id));
     }
 
     [TestMethod]
-    [Ignore]
     public async Task ReadManyItemsAsync_FailsReadingSomeNonExistent()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item1 = new(Test.GenerateRandomString(), "Finley");
+        await Service.CreateItemAsync(container, item1, item1.Id);
+
+        List<(string, PartitionKey)> items = new()
+        {
+            (item1.Id, new(item1.Id)),
+            ("DoesntExist", new("DoesntExist"))
+        };
+
+        // Act
+        IEnumerable<TestItem> res = await Service.ReadManyItemsAsync<TestItem>(container, items);
+
+        // Assert
+        Assert.IsTrue(res.Count() == 1);
+        Assert.AreEqual(item1.Id, res.First().Id);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task ReadManyItemsAsync_FailsReadingAllNonExistent()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        List<(string, PartitionKey)> items = new()
+        {
+            ("DoesntExist1", new("DoesntExist1")),
+            ("DoesntExist2", new("DoesntExist2"))
+        };
+
+        // Act
+        IEnumerable<TestItem> res = await Service.ReadManyItemsAsync<TestItem>(container, items);
+
+        // Assert
+        Assert.IsFalse(res.Any());
     }
 
     [TestMethod]
-    [Ignore]
     public async Task PatchItemAsync_PatchesExisting()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+        await Service.CreateItemAsync(container, item, item.Id);
+
+        List<PatchOperation> operations = new()
+        {
+            PatchOperation.Replace("/name", "Daniel")
+        };
+
+        // Act
+        TestItem res = await Service.PatchItemAsync<TestItem>(container, item.Id, item.Id, operations);
+
+        // Assert
+        Assert.AreEqual("Daniel", res.Name);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task PatchItemAsync_FailsPatchingNonExistent()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        string id = Test.GenerateRandomString();
+
+        List<PatchOperation> operations = new()
+        {
+            PatchOperation.Replace("/name", "Daniel")
+        };
+
+        // Act
+        async Task<TestItem> res() => await Service.PatchItemAsync<TestItem>(container, id, id, operations);
+
+        // Assert
+        await Assert.ThrowsExceptionAsync<CosmosException>(res);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task DeleteItemAsync_DeletesExisting()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+        await Service.CreateItemAsync(container, item, new(item.Id));
+
+        // Act
+        TestItem? res = await Service.DeleteItemAsync<TestItem>(container, item.Id, item.Id);
+        async Task<TestItem> get() => await Service.ReadItemAsync<TestItem>(container, item.Id, item.Id);
+
+        // Assert
+        Assert.IsNull(res);
+        await Assert.ThrowsExceptionAsync<CosmosException>(get);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task DeleteItemAsync_FailsDeletingNonExistent()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+
+        // Act
+        async Task<TestItem?> res() => await Service.DeleteItemAsync<TestItem>(container, item.Id, item.Id);
+
+        // Assert
+        await Assert.ThrowsExceptionAsync<CosmosException>(res);
     }
 
     [TestMethod]
-    [Ignore]
     public async Task QueryAsync_HandlesQuery()
     {
+        // Arrange
+        string databaseId = "test-db";
+        string containerId = "test";
+        string partitionKeyPath = "/id";
+
+        Container container = await Service.GetContainerAsync(databaseId, containerId, partitionKeyPath);
+
+        TestItem item = new(Test.GenerateRandomString(), "Finley");
+        await Service.CreateItemAsync(container, item, item.Id);
+
+        // Act
+        TestItem[] res = await Service.QueryAsync<TestItem>(container, query => query.Where(i => i.Id == item.Id));
+
+        // Assert
+        Assert.IsTrue(res.All(i => i.Id == item.Id));
+    }
+}
+
+public class TestItem : CosmosItem
+{
+    [JsonProperty("name")]
+    public string Name;
+
+    public TestItem(string id, string name, DateTime? ts = null) : base(id, ts)
+    {
+        Name = name;
     }
 }

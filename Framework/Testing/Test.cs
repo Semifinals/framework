@@ -35,4 +35,20 @@ public class Test
         // Return http request
         return httpContext.Request;
     }
+
+    /// <summary>
+    /// Generate a random string
+    /// </summary>
+    /// <returns></returns>
+    public static string GenerateRandomString(int minLength = 16, int maxLength = 16)
+    {
+        Random rand = new();
+
+        int length = rand.Next(minLength, maxLength);
+
+        char[] chars = new char[length];
+        string res = string.Join("", chars.Select(c => Convert.ToChar(65 + rand.Next(0, 26))));
+
+        return res;
+    }
 }

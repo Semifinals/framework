@@ -34,6 +34,7 @@ public class DtoValidator<T> : AbstractValidator<T>, IDtoValidator where T : Dto
 {
     public DtoValidator(Action<DtoValidator<T>> callback)
     {
+        RuleLevelCascadeMode = CascadeMode.Stop;
         callback(this);
     }
 
