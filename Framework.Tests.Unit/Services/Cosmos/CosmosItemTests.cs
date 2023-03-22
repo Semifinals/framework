@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Semifinals.Framework.Services.Cosmos;
 
-namespace IdentityService.Tests.Unit.Services.Cosmos;
+namespace Semifinals.Framework.Tests.Unit;
 
 [TestClass]
 public class CosmosItemTests

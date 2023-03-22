@@ -1,11 +1,10 @@
 ﻿using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Semifinals.Framework.Services.Cosmos;
 using Semifinals.Framework.Testing;
 
-namespace IdentityService.Tests.E2E.Services.Cosmos;
+namespace Semifinals.Framework.Tests.E2E;
 
 [TestClass]
 public class CosmosServiceTests
@@ -15,13 +14,7 @@ public class CosmosServiceTests
     [TestInitialize]
     public void TestInitialize()
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", true)
-            .AddEnvironmentVariables()
-            .Build();
-
-        Service = new(config.GetValue<string>("DbConnectionString"));
+        Service = new(Environment.GetEnvironmentVariable("DbConnectionString")!);
     }
 
     [TestMethod]

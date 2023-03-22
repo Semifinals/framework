@@ -13,8 +13,8 @@ namespace Semifinals.Framework;
 /// <typeparam name="T1">The expected DTO of the request body</typeparam>
 /// <typeparam name="T2">The expected DTO of the request params</typeparam>
 public class Function<T1, T2>
-    where T1 : Dto
-    where T2 : Dto
+    where T1 : Dto, IBodyDto
+    where T2 : Dto, IParamDto
 {
     /// <summary>
     /// Determines whether or not a user must be authenticated to call the function.
@@ -56,9 +56,12 @@ public class Function<T1, T2>
         T1 body,
         T2 parameters,
         bool requiresAuth,
-        int requiresFlags)
+        int requiresFlags,
+        string jwtSecret = "")
     {
-        string TEMPORARY_JWT_SECRET = ""; // TODO: Figure out how to pass environment variables to here
+        // Warn if jwtSecret not defined
+        if (string.IsNullOrEmpty(jwtSecret))
+            Console.WriteLine("WARN: jwtSecret not defined, this will only cause issues if JWTs are used in this function.");
 
         // Assign auth and flags
         RequiresAuth = (requiresFlags > 0) || requiresAuth;
@@ -82,12 +85,18 @@ public class Function<T1, T2>
             if (authorizationHeader.StartsWith("Bearer "))
             {
                 string jwt = authorizationHeader[7..];
-                if (JwtService.TryParse<IUser>(jwt, TEMPORARY_JWT_SECRET, out var parsedJwt))
+                if (JwtService.TryParse<IUser>(jwt, jwtSecret, out var parsedJwt))
                     User = parsedJwt!.Payload.Content;
             }
         }
     }
 
+    /// <summary>
+    /// Validate the body of a HTTP request.
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <returns>The parsed body</returns>
+    /// <exception cref="ValidationException">Occurs when validation fails</exception>
     public static async Task<T1> ValidateBody(HttpRequest req)
     {
         // Read body of request
@@ -105,6 +114,12 @@ public class Function<T1, T2>
         return parsedBody;
     }
 
+    /// <summary>
+    /// Validate the request params of a HTTP request.
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <returns>The parsed params</returns>
+    /// <exception cref="ValidationException">Occurs when validation fails</exception>
     public static T2 ValidateParams(HttpRequest req)
     {
         // Read params of request
@@ -124,6 +139,12 @@ public class Function<T1, T2>
         return parsedParams;
     }
 
+    /// <summary>
+    /// Verify that the request authentication matches requirements for the function.
+    /// </summary>
+    /// <param name="func">The function to compare</param>
+    /// <exception cref="UnauthorizedException">Occurs when the function requires a user to be authenticated but there isn't one</exception>
+    /// <exception cref="ForbiddenException">Occurs when the function requires some permissions the user doesn't have</exception>
     public static void VerifyUser(Function<T1, T2> func)
     {
         // Require a user exist if the function requires auth
@@ -135,6 +156,13 @@ public class Function<T1, T2>
             throw new ForbiddenException();
     }
 
+    /// <summary>
+    /// Run the validation and verification, and run the function if valid.
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="requiresAuth">Whether or not an authorised user is required</param>
+    /// <param name="requiresFlags">The permission flags required to use this function</param>
+    /// <returns>A callback function to call with the function accessible</returns>
     public static Func<Func<Function<T1, T2>, Task<IActionResult>>, Task<IActionResult>> Run(
         HttpRequest req,
         bool requiresAuth = false,
@@ -186,4 +214,46 @@ public class Function<T1, T2>
             return await callback(func);
         });
     }
+}
+
+/// <summary>
+/// A support class to handle HTTP requests.
+/// </summary>
+/// <typeparam name="T1">The expected DTO of the request body</typeparam>
+public class Function<T1> : Function<T1, NoParamDto>
+    where T1 : Dto, IBodyDto
+{
+    public Function(
+        HttpRequest req,
+        T1 body,
+        bool requiresAuth,
+        int requiresFlags,
+        string jwtSecret = "")
+    : base(
+        req,
+        body,
+        new NoParamDto(),
+        requiresAuth,
+        requiresFlags,
+        jwtSecret) { }
+}
+
+/// <summary>
+/// A support class to handle HTTP requests.
+/// </summary>
+public class Function : Function<NoBodyDto, NoParamDto>
+{
+    public Function(
+        HttpRequest req,
+        bool requiresAuth,
+        int requiresFlags,
+        string jwtSecret = "")
+    : base(
+        req,
+        new NoBodyDto(),
+        new NoParamDto(),
+        requiresAuth,
+        requiresFlags,
+        jwtSecret)
+    { }
 }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Semifinals.Framework.Services.Jwt;
 
-namespace Semifinals.Framework.Tests.Unit.Services.Jwt;
+namespace Semifinals.Framework.Tests.Unit;
 
 [TestClass]
 public class JwtServiceTests

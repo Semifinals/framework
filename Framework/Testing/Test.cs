@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Newtonsoft.Json;
 
 namespace Semifinals.Framework.Testing;
@@ -15,7 +16,10 @@ public class Test
     /// <param name="dto">The DTO to send</param>
     /// <returns>The HTTP Request to send</returns>
     public static async Task<HttpRequest> CreateRequest<T>(
-            T dto)
+            T dto,
+            HttpMethod method = HttpMethod.GET,
+            string? authorizationHeader = null,
+            QueryBuilder? query = null)
         where T : Dto
     {
         // Create http context for the request
@@ -31,6 +35,16 @@ public class Test
         await writer.FlushAsync();
         stream.Position = 0;
         httpContext.Request.Body = stream;
+
+        // Assign optional properties
+        Console.WriteLine(method.ToString());
+        httpContext.Request.Method = method.ToString();
+
+        if (authorizationHeader != null)
+            httpContext.Request.Headers["Authorization"] = authorizationHeader;
+
+        if (query != null)
+            httpContext.Request.QueryString = query.ToQueryString();
 
         // Return http request
         return httpContext.Request;

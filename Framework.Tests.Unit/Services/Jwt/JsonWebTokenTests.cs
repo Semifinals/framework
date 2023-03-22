@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Semifinals.Framework.Services.Jwt;
 using System.Text;
 
-namespace Semifinals.Framework.Tests.Unit.Services.Jwt;
+namespace Semifinals.Framework.Tests.Unit;
 
 [TestClass]
 public class JsonWebTokenTests
@@ -54,7 +54,7 @@ public class JwtHeaderTests
         // Act
         byte[] headerBytes = Convert.FromBase64String(validHeader);
         string headerJson = Encoding.UTF8.GetString(headerBytes);
-        JwtHeader header = JsonConvert.DeserializeObject<JwtHeader>(headerJson);
+        JwtHeader header = JsonConvert.DeserializeObject<JwtHeader>(headerJson)!;
 
         // Assert
         Assert.IsNotNull(header);
@@ -86,7 +86,7 @@ public class JwtPayloadTests
         // Act
         byte[] payloadBytes = Convert.FromBase64String(validPayload);
         string payloadJson = Encoding.UTF8.GetString(payloadBytes);
-        JwtPayload<JwtTestPayload> payload = JsonConvert.DeserializeObject<JwtPayload<JwtTestPayload>>(payloadJson);
+        JwtPayload<JwtTestPayload> payload = JsonConvert.DeserializeObject<JwtPayload<JwtTestPayload>>(payloadJson)!;
 
         // Assert
         Assert.IsNotNull(payload);
