@@ -14,6 +14,9 @@ public class Test
     /// </summary>
     /// <typeparam name="T">The type of the DTO to send</typeparam>
     /// <param name="dto">The DTO to send</param>
+    /// <param name="method">The HTTP method to use in the request</param>
+    /// <param name="authorizationHeader">The authorization header of the request</param>
+    /// <param name="query">The query parameters of the request</param>
     /// <returns>The HTTP Request to send</returns>
     public static async Task<HttpRequest> CreateRequest<T>(
             T dto,
@@ -51,9 +54,26 @@ public class Test
     }
 
     /// <summary>
-    /// Generate a random string
+    /// Create a HTTP request to be used to run a controller's function.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="method">The HTTP method to use in the request</param>
+    /// <param name="authorizationHeader">The authorization header of the request</param>
+    /// <param name="query">The query parameters of the request</param>
+    /// <returns>The HTTP Request to send</returns>
+    public static async Task<HttpRequest> CreateRequest(
+        HttpMethod method = HttpMethod.GET,
+        string? authorizationHeader = null,
+        QueryBuilder? query = null)
+    {
+        return await CreateRequest<NoBodyDto>(new(), method, authorizationHeader, query);
+    }
+
+    /// <summary>
+    /// Generate a random string.
+    /// </summary>
+    /// <param name="minLength">The minimum length of the string</param>
+    /// <param name="maxLength">The maximum length of the string</param>
+    /// <returns>A random string</returns>
     public static string GenerateRandomString(int minLength = 16, int maxLength = 16)
     {
         Random rand = new();
