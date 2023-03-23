@@ -166,7 +166,8 @@ public class Function<T1, T2>
     public static Func<Func<Function<T1, T2>, Task<IActionResult>>, Task<IActionResult>> Run(
         HttpRequest req,
         bool requiresAuth = false,
-        int requiresFlags = 0)
+        int requiresFlags = 0,
+        string jwtSecret = "")
     {
         return new(async callback =>
         {
@@ -195,7 +196,7 @@ public class Function<T1, T2>
             }
 
             // Verify the user
-            Function<T1, T2> func = new(req, parsedBody, parsedParams, requiresAuth, requiresFlags);
+            Function<T1, T2> func = new(req, parsedBody, parsedParams, requiresAuth, requiresFlags, jwtSecret);
 
             try
             {
