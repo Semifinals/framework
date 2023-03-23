@@ -1,9 +1,9 @@
-﻿namespace Semifinals.Framework;
+﻿namespace Semifinals.Framework.Services.Jwt;
 
 /// <summary>
 /// Base interface expected of a user to be used in authentication.
 /// </summary>
-public class IUser
+public interface IUser
 {
-    public int Flags;
+    int Flags { get; }
 }

@@ -29,7 +29,7 @@ public class Function<T1, T2>
     /// <summary>
     /// The authenticated user of the request if present.
     /// </summary>
-    public readonly IUser? User;
+    public readonly JwtPayload<JwtUser>? User;
 
     /// <summary>
     /// The HTTP method of the request.
@@ -85,8 +85,8 @@ public class Function<T1, T2>
             if (authorizationHeader.StartsWith("Bearer "))
             {
                 string jwt = authorizationHeader[7..];
-                if (JwtService.TryParse<IUser>(jwt, jwtSecret, out var parsedJwt))
-                    User = parsedJwt!.Payload.Content;
+                if (JwtService.TryParse<JwtUser>(jwt, jwtSecret, out var parsedJwt))
+                    User = parsedJwt!.Payload;
             }
         }
     }
@@ -147,12 +147,14 @@ public class Function<T1, T2>
     /// <exception cref="ForbiddenException">Occurs when the function requires some permissions the user doesn't have</exception>
     public static void VerifyUser(Function<T1, T2> func)
     {
+        Console.WriteLine(func.User?.Subject + " " + func.User?.Content.Flags);
+
         // Require a user exist if the function requires auth
         if (func.RequiresAuth && func.User == null)
             throw new UnauthorizedException();
 
         // Require that the user has all necessary user flags
-        if (func.User != null && (func.User.Flags & func.RequiresFlags) != func.RequiresFlags)
+        if (func.User != null && (func.User.Content.Flags & func.RequiresFlags) != func.RequiresFlags)
             throw new ForbiddenException();
     }
 

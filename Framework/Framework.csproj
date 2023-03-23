@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Semifinals.Framework</PackageId>
-	<Version>2.0.2</Version>
+	<Version>2.0.3</Version>
     <AssemblyName>Semifinals.Framework</AssemblyName>
     <RootNamespace>Semifinals.Framework</RootNamespace>
     <Company>Semifinals</Company>
@@ -20,6 +20,10 @@
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.32.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Users\" />
   </ItemGroup>
 
 </Project>
