@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Semifinals.Framework.Services.Jwt;
 using Semifinals.Framework.Testing;
 
 namespace Semifinals.Framework.Tests.E2E;
