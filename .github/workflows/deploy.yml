@@ -36,7 +36,7 @@ jobs:
         # run: dotnet nuget add source "https://nuget.pkg.github.com/Semifinals/index.json" --configfile ./nuget.config -u ${{ secrets.SOURCE_USER }} -p ${{ secrets.SOURCE_PASSWORD }} --store-password-in-clear-text --name github
 
       - name: Restore dependencies
-        run: dotnet restore --configfile ./nuget.config
+        run: dotnet restore # --configfile ./nuget.config
 
       - name: Build
         run: dotnet build --configuration $BUILD_CONFIG -p:Version=$BUILD_VERSION --no-restore
