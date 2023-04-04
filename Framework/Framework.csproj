@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Semifinals.Framework</PackageId>
-	<Version>3.0.0</Version>
+	  <Version>3.0.0</Version>
     <AssemblyName>Semifinals.Framework</AssemblyName>
     <RootNamespace>Semifinals.Framework</RootNamespace>
     <Company>Semifinals</Company>
@@ -13,7 +13,6 @@
     <Authors>Finley Sherwood</Authors>
     <Description>A simple .NET framework to build microservices in the Azure ecosystem for the Semifinals API.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +20,6 @@
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.32.1" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.1.3" />
     <PackageReference Include="Semifinals.Utils.Tokens" Version="1.0.0" />
   </ItemGroup>
 
