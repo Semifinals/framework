@@ -1,54 +1,50 @@
 name: CI
 
 on:
-  create:
-    branches: 
-      - release/**
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
-    
+  release:
+    types: [created]
+
 jobs:
   build:
-
     env:
-      BUILD_CONFIG: 'Release'
-      SOLUTION: 'Framework.sln'
+      BUILD_CONFIG: Release
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Get Build Version
-      run: |
-        Import-Module .\build\GetBuildVersion.psm1
-        Write-Host $Env:GITHUB_REF
-        $version = GetBuildVersion -VersionString $Env:GITHUB_REF
-        echo "BUILD_VERSION=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
-        echo "BUILD_VERSION=$version"
-      shell: pwsh
+      - uses: actions/checkout@v3
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.5
+      - name: Get Build Version
+        run: |
+          Import-Module .\build\GetBuildVersion.psm1
+          Write-Host $Env:GITHUB_REF
+          $version = GetBuildVersion -VersionString $Env:GITHUB_REF
+          echo "BUILD_VERSION=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          echo "BUILD_VERSION=$version"
+        shell: pwsh
 
-    - name: Restore dependencies
-      run: nuget restore $SOLUTION
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
+      - name: Restore dependencies
+        run: nuget restore
 
-    - name: Build
-      run: dotnet build $SOLUTION --configuration $BUILD_CONFIG -p:Version=$BUILD_VERSION --no-restore
+      - name: Build
+        run: dotnet build --configuration $BUILD_CONFIG -p:Version=$BUILD_VERSION --no-restore
 
-    - name: Run tests
-      run: dotnet test /p:Configuration=$BUILD_CONFIG --no-restore --no-build --verbosity normal
-      
-    - name: Publish
-      if: startsWith(github.ref, 'refs/heads/release')
-      run: nuget push **\*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}}
+      - name: Run tests
+        run: dotnet test /p:Configuration=$BUILD_CONFIG --no-restore --no-build --verbosity normal
+
+      - name: Add Github as nuget source
+        run: dotnet nuget add source --username Semifinals --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Semifinals/index.json"
+
+      - name: Package the project
+        run: dotnet pack --configuration $BUILD_CONFIG
+
+      - name: Publish
+        run: dotnet nuget push "/bin/${{ env.BUILD_CONFIG }}/Semifinals.Framework.${{ env.BUILD_VERSION }}.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
