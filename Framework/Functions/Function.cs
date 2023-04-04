@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Semifinals.Framework.Services.Jwt;
+using Semifinals.Utils.Tokens;
 
 namespace Semifinals.Framework;
 
@@ -29,7 +29,7 @@ public class Function<T1, T2>
     /// <summary>
     /// The authenticated user of the request if present.
     /// </summary>
-    public readonly JwtPayload<JwtUser>? User;
+    public readonly string? User;
 
     /// <summary>
     /// The HTTP method of the request.
@@ -57,11 +57,11 @@ public class Function<T1, T2>
         T2 parameters,
         bool requiresAuth,
         int requiresFlags,
-        string jwtSecret = "")
+        string tokenSecret = "")
     {
-        // Warn if jwtSecret not defined
-        if (string.IsNullOrEmpty(jwtSecret))
-            Console.WriteLine("WARN: jwtSecret not defined, this will only cause issues if JWTs are used in this function.");
+        // Warn if tokenSecret not defined
+        if (string.IsNullOrEmpty(tokenSecret))
+            Console.WriteLine("WARN: tokenSecret not defined, this will only cause issues if tokens are used in this function.");
 
         // Assign auth and flags
         RequiresAuth = (requiresFlags > 0) || requiresAuth;
@@ -84,9 +84,9 @@ public class Function<T1, T2>
 
             if (authorizationHeader.StartsWith("Bearer "))
             {
-                string jwt = authorizationHeader[7..];
-                if (JwtService.TryParse<JwtUser>(jwt, jwtSecret, out var parsedJwt))
-                    User = parsedJwt!.Payload;
+                string token = authorizationHeader[7..];
+                if (Token.Verify(token, tokenSecret))
+                    User = token;
             }
         }
     }
@@ -104,8 +104,8 @@ public class Function<T1, T2>
         JObject body = JsonConvert.DeserializeObject<JObject>(requestBody, new JsonSerializerSettings
         {
             DateParseHandling = DateParseHandling.None
-        });
-        T1 parsedBody = body.ToObject<T1>();
+        })!;
+        T1 parsedBody = body.ToObject<T1>()!;
 
         // Validate DTO
         ValidationResult res = parsedBody.Validator.Test(parsedBody);
@@ -130,7 +130,7 @@ public class Function<T1, T2>
             requestParams.Add(value.Key, value.Value.First()); // TODO: Check how this interacts with no parameters present
         }
 
-        T2 parsedParams = JObject.FromObject(requestParams).ToObject<T2>(); // TODO: Ensure property types are converted
+        T2 parsedParams = JObject.FromObject(requestParams).ToObject<T2>()!; // TODO: Ensure property types are converted
 
         // Validate DTO
         ValidationResult res = parsedParams.Validator.Test(parsedParams);
@@ -147,14 +147,13 @@ public class Function<T1, T2>
     /// <exception cref="ForbiddenException">Occurs when the function requires some permissions the user doesn't have</exception>
     public static void VerifyUser(Function<T1, T2> func)
     {
-        Console.WriteLine(func.User?.Subject + " " + func.User?.Content.Flags);
-
         // Require a user exist if the function requires auth
         if (func.RequiresAuth && func.User == null)
             throw new UnauthorizedException();
 
         // Require that the user has all necessary user flags
-        if (func.User != null && (func.User.Content.Flags & func.RequiresFlags) != func.RequiresFlags)
+        int userFlags = 0; // TODO: Get user flags from separate API
+        if (func.User != null && (userFlags & func.RequiresFlags) != func.RequiresFlags)
             throw new ForbiddenException();
     }
 
@@ -169,7 +168,7 @@ public class Function<T1, T2>
         HttpRequest req,
         bool requiresAuth = false,
         int requiresFlags = 0,
-        string jwtSecret = "")
+        string tokenSecret = "")
     {
         return new(async callback =>
         {
@@ -198,7 +197,7 @@ public class Function<T1, T2>
             }
 
             // Verify the user
-            Function<T1, T2> func = new(req, parsedBody, parsedParams, requiresAuth, requiresFlags, jwtSecret);
+            Function<T1, T2> func = new(req, parsedBody, parsedParams, requiresAuth, requiresFlags, tokenSecret);
 
             try
             {
@@ -231,14 +230,14 @@ public class Function<T1> : Function<T1, NoParamDto>
         T1 body,
         bool requiresAuth,
         int requiresFlags,
-        string jwtSecret = "")
+        string tokenSecret = "")
     : base(
         req,
         body,
         new NoParamDto(),
         requiresAuth,
         requiresFlags,
-        jwtSecret) { }
+        tokenSecret) { }
 }
 
 /// <summary>
@@ -250,13 +249,13 @@ public class Function : Function<NoBodyDto, NoParamDto>
         HttpRequest req,
         bool requiresAuth,
         int requiresFlags,
-        string jwtSecret = "")
+        string tokenSecret = "")
     : base(
         req,
         new NoBodyDto(),
         new NoParamDto(),
         requiresAuth,
         requiresFlags,
-        jwtSecret)
+        tokenSecret)
     { }
 }
