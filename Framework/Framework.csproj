@@ -13,6 +13,7 @@
     <Authors>Finley Sherwood</Authors>
     <Description>A simple .NET framework to build microservices in the Azure ecosystem for the Semifinals API.</Description>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
