@@ -32,10 +32,10 @@ jobs:
           dotnet-version: 6.0.x
 
       - name: Add github packages source
-        run: dotnet nuget add source --username ${{ secrets.SOURCE_USER }} --password ${{ secrets.SOURCE_PASSWORD }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Semifinals/index.json"
+        run: dotnet nuget update source github --configfile ./nuget.config -s "https://nuget.pkg.github.com/Semifinals/index.json" -u ${{ secrets.SOURCE_USER }} -p ${{ secrets.SOURCE_PASSWORD }} --store-password-in-clear-text
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore --configfile ./nuget.config
 
       - name: Build
         run: dotnet build --configuration $BUILD_CONFIG -p:Version=$BUILD_VERSION --no-restore
