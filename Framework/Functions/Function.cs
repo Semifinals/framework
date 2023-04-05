@@ -59,6 +59,14 @@ public class Function<T1, T2>
         int requiresFlags,
         string tokenSecret = "")
     {
+        // TEMPORARY: Test environment variable access from package
+        if (requiresFlags == 1234)
+        {
+            var testEnvVar = Environment.GetEnvironmentVariable("TestEnvVar");
+            Console.WriteLine(testEnvVar is null ? "Is Null." : "Is Not Null.", testEnvVar);
+        }
+            
+
         // Warn if tokenSecret not defined
         if (string.IsNullOrEmpty(tokenSecret))
             Console.WriteLine("WARN: tokenSecret not defined, this will only cause issues if tokens are used in this function.");
