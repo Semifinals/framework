@@ -63,7 +63,7 @@ public class Function<T1, T2>
         if (requiresFlags == 1234)
         {
             var testEnvVar = Environment.GetEnvironmentVariable("TestEnvVar");
-            Console.WriteLine(testEnvVar is null ? "Is Null." : "Is Not Null.", testEnvVar);
+            Console.WriteLine((testEnvVar is null ? "Is Null." : "Is Not Null: ") + testEnvVar);
         }
             
 
