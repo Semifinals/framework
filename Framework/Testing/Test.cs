@@ -40,7 +40,6 @@ public class Test
         httpContext.Request.Body = stream;
 
         // Assign optional properties
-        Console.WriteLine(method.ToString());
         httpContext.Request.Method = method.ToString();
 
         if (authorizationHeader != null)

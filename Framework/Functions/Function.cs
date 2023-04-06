@@ -56,20 +56,10 @@ public class Function<T1, T2>
         T1 body,
         T2 parameters,
         bool requiresAuth,
-        int requiresFlags,
-        string tokenSecret = "")
+        int requiresFlags)
     {
-        // TEMPORARY: Test environment variable access from package
-        if (requiresFlags == 1234)
-        {
-            var testEnvVar = Environment.GetEnvironmentVariable("TestEnvVar");
-            Console.WriteLine((testEnvVar is null ? "Is Null." : "Is Not Null: ") + testEnvVar);
-        }
-            
-
-        // Warn if tokenSecret not defined
-        if (string.IsNullOrEmpty(tokenSecret))
-            Console.WriteLine("WARN: tokenSecret not defined, this will only cause issues if tokens are used in this function.");
+        if (Environment.GetEnvironmentVariable("TokenSecret") is null)
+            throw new MissingTokenSecretException();
 
         // Assign auth and flags
         RequiresAuth = (requiresFlags > 0) || requiresAuth;
@@ -93,7 +83,7 @@ public class Function<T1, T2>
             if (authorizationHeader.StartsWith("Bearer "))
             {
                 string token = authorizationHeader[7..];
-                if (Token.Verify(token, tokenSecret))
+                if (Token.Verify(token, Environment.GetEnvironmentVariable("TokenSecret")!))
                     User = token;
             }
         }
@@ -175,8 +165,7 @@ public class Function<T1, T2>
     public static Func<Func<Function<T1, T2>, Task<IActionResult>>, Task<IActionResult>> Run(
         HttpRequest req,
         bool requiresAuth = false,
-        int requiresFlags = 0,
-        string tokenSecret = "")
+        int requiresFlags = 0)
     {
         return new(async callback =>
         {
@@ -205,7 +194,12 @@ public class Function<T1, T2>
             }
 
             // Verify the user
-            Function<T1, T2> func = new(req, parsedBody, parsedParams, requiresAuth, requiresFlags, tokenSecret);
+            Function<T1, T2> func = new(
+                req,
+                parsedBody,
+                parsedParams,
+                requiresAuth,
+                requiresFlags);
 
             try
             {
@@ -237,15 +231,13 @@ public class Function<T1> : Function<T1, NoParamDto>
         HttpRequest req,
         T1 body,
         bool requiresAuth,
-        int requiresFlags,
-        string tokenSecret = "")
+        int requiresFlags)
     : base(
         req,
         body,
         new NoParamDto(),
         requiresAuth,
-        requiresFlags,
-        tokenSecret) { }
+        requiresFlags) { }
 }
 
 /// <summary>
@@ -256,14 +248,12 @@ public class Function : Function<NoBodyDto, NoParamDto>
     public Function(
         HttpRequest req,
         bool requiresAuth,
-        int requiresFlags,
-        string tokenSecret = "")
+        int requiresFlags)
     : base(
         req,
         new NoBodyDto(),
         new NoParamDto(),
         requiresAuth,
-        requiresFlags,
-        tokenSecret)
+        requiresFlags)
     { }
 }
