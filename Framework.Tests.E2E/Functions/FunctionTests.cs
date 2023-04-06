@@ -10,6 +10,12 @@ namespace Semifinals.Framework.Tests.E2E;
 [TestClass]
 public class FunctionTests : Test
 {
+    [TestInitialize]
+    public void InitializeTests()
+    {
+        Environment.SetEnvironmentVariable("TokenSecret", "secret");
+    }
+
     [TestMethod]
     public async Task Constructor_BuildsCorrectly()
     {
@@ -31,7 +37,7 @@ public class FunctionTests : Test
         int requiresFlags = 1;
 
         // Act
-        Function<TestBodyDto, TestParamDto> func = new(req, bodyDto, paramDto, requiresAuth, requiresFlags, "jwtSecret");
+        Function<TestBodyDto, TestParamDto> func = new(req, bodyDto, paramDto, requiresAuth, requiresFlags);
 
         // Assert
         Assert.AreEqual(requiresAuth, func.RequiresAuth);
@@ -130,7 +136,7 @@ public class FunctionTests : Test
     {
         // Arrange
         HttpRequest req = await CreateRequest<NoBodyDto>(new());
-        Function func = new(req, false, 0, "secret");
+        Function func = new(req, false, 0);
 
         // Act
         Function.VerifyUser(func);
@@ -146,7 +152,7 @@ public class FunctionTests : Test
         string token = "dGVzdA==.ODY0MDA=.iNsbhu5s1rdoPT960fY0Bu7sQAaaP2ysD3RJS9DQUmg=";
         string authorizationHeader = $"Bearer {token}";
         HttpRequest req = await CreateRequest<NoBodyDto>(new(), authorizationHeader: authorizationHeader);
-        Function func = new(req, true, 0, "secret");
+        Function func = new(req, true, 0);
 
         // Act
         Function.VerifyUser(func);
@@ -160,7 +166,7 @@ public class FunctionTests : Test
     {
         // Arrange
         HttpRequest req = await CreateRequest<NoBodyDto>(new());
-        Function func = new(req, true, 0, "secret");
+        Function func = new(req, true, 0);
 
         // Act
         void res() => Function.VerifyUser(func);

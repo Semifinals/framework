@@ -9,6 +9,12 @@ namespace Semifinals.Framework.Tests.Unit;
 [TestClass]
 public class FunctionBuilderTests : Test
 {
+    [TestInitialize]
+    public void InitializeTests()
+    {
+        Environment.SetEnvironmentVariable("TokenSecret", "secret");
+    }
+
     [TestMethod]
     public void Init_InitializesFunctionBuilder()
     {

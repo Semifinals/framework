@@ -43,10 +43,9 @@ public class FunctionBuilder<T1, T2>
     public Func<Func<Function<T1, T2>, Task<IActionResult>>, Task<IActionResult>> Build(
         HttpRequest req,
         bool requiresAuth = false,
-        int requiresFlags = 0,
-        string tokenSecret = "")
+        int requiresFlags = 0)
     {
-        return Function<T1, T2>.Run(req, requiresAuth, requiresFlags, tokenSecret);
+        return Function<T1, T2>.Run(req, requiresAuth, requiresFlags);
     }
 }
 
