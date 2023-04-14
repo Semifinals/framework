@@ -32,7 +32,10 @@ public class RequestBuilderTests
         RequestBuilder builder = new(method, uri);
 
         // Act
-        builder.Handle<dynamic>(200, body => { });
+        builder.Handle(200, async body =>
+        {
+            await Task.Delay(1);
+        });
 
         // Assert
         Assert.AreEqual(1, builder.Handlers.Count);
@@ -97,8 +100,9 @@ public class RequestBuilderTests
         bool success = false;
 
         // Act
-        builder.Handle<dynamic>(200, body =>
+        builder.Handle(200, async body =>
         {
+            await Task.Delay(1);
             success = true;
         });
 

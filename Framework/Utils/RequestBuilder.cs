@@ -15,7 +15,7 @@ public class RequestBuilder
 
     public Dictionary<string, string> Headers = new();
 
-    public readonly Dictionary<int, Action<string>> Handlers = new();
+    public readonly Dictionary<int, Func<string, Task>> Handlers = new();
 
     public RequestBuilder(HttpMethod method, string url)
     {
@@ -26,11 +26,10 @@ public class RequestBuilder
     /// <summary>
     /// Add a handler to a given status code.
     /// </summary>
-    /// <typeparam name="T">The type of the response</typeparam>
     /// <param name="statusCode">The status code to handle</param>
     /// <param name="callback">The logic to handle the response</param>
     /// <returns>This builder</returns>
-    public RequestBuilder Handle<T>(int statusCode, Action<string> callback)
+    public RequestBuilder Handle(int statusCode, Func<string, Task> callback)
     {
         Handlers.Add(statusCode, callback);
         return this;
@@ -87,7 +86,7 @@ public class RequestBuilder
         int statusCode = (int)res.StatusCode;
 
         if (Handlers.ContainsKey(statusCode))
-            Handlers[statusCode](await res.Content.ReadAsStringAsync());
+            await Handlers[statusCode](await res.Content.ReadAsStringAsync());
         else
             throw new NotHandledException(statusCode);
     }
