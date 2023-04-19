@@ -1,0 +1,1 @@
+﻿In order to run demo tests, the demo project needs to be currently running. This can be done by clicking "Run Without Debugging" on `Framework.Demo`.

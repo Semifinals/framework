@@ -99,6 +99,10 @@ public class Function<T1, T2>
     {
         // Read body of request
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync(); // TODO: Check how this interacts with no body present
+
+        if (requestBody == "null")
+            throw new ArgumentNullException(nameof(req));
+
         JObject body = JsonConvert.DeserializeObject<JObject>(requestBody, new JsonSerializerSettings
         {
             DateParseHandling = DateParseHandling.None
@@ -107,7 +111,8 @@ public class Function<T1, T2>
 
         // Validate DTO
         ValidationResult res = parsedBody.Validator.Test(parsedBody);
-        if (!res.IsValid) throw new ValidationException(res.Errors);
+        if (!res.IsValid)
+            throw new ValidationException(res.Errors);
 
         return parsedBody;
     }
@@ -170,15 +175,22 @@ public class Function<T1, T2>
         return new(async callback =>
         {
             // Validate the request body
-            T1 parsedBody;
+            T1? parsedBody;
 
             try
             {
-                parsedBody = await ValidateBody(req);
+                if (typeof(T1) == typeof(NoBodyDto))
+                    parsedBody = new NoBodyDto() as T1;
+                else
+                    parsedBody = await ValidateBody(req);
             }
             catch (ValidationException ex)
             {
                 return new BadRequestObjectResult(ex.Errors.Select(err => err.ErrorMessage));
+            }
+            catch (ArgumentNullException ex)
+            {
+                return new BadRequestObjectResult(new string[] { ex.Message });
             }
 
             // Validate the request params
@@ -196,7 +208,7 @@ public class Function<T1, T2>
             // Verify the user
             Function<T1, T2> func = new(
                 req,
-                parsedBody,
+                parsedBody!,
                 parsedParams,
                 requiresAuth,
                 requiresFlags);
