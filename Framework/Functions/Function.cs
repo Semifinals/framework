@@ -105,7 +105,8 @@ public class Function<T1, T2>
 
         JObject body = JsonConvert.DeserializeObject<JObject>(requestBody, new JsonSerializerSettings
         {
-            DateParseHandling = DateParseHandling.None
+            DateParseHandling = DateParseHandling.None,
+            NullValueHandling = NullValueHandling.Ignore
         })!;
         T1 parsedBody = body.ToObject<T1>()!;
 

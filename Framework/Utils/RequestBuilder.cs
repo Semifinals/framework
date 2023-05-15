@@ -60,6 +60,16 @@ public class RequestBuilder
     }
 
     /// <summary>
+    /// Add an authorization header to the request.
+    /// </summary>
+    /// <param name="token">The token to add</param>
+    /// <returns>This builder</returns>
+    public RequestBuilder AddBearerAuthorizationHeader(string token)
+    {
+        return AddHeader("Authorization", $"Bearer ${token}");
+    }
+
+    /// <summary>
     /// Make the request built from the builder.
     /// </summary>
     public async Task Call()

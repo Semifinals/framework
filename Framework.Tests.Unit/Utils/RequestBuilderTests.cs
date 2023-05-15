@@ -90,6 +90,23 @@ public class RequestBuilderTests
     }
 
     [TestMethod]
+    public void AddBearerAuthorizationHeaders_AddsHeader()
+    {
+        // Arrange
+        HttpMethod method = HttpMethod.GET;
+        string uri = "";
+        RequestBuilder builder = new(method, uri);
+
+        // Act
+        builder.AddBearerAuthorizationHeader("token");
+
+        // Assert
+        Assert.AreEqual(1, builder.Headers.Count);
+        Assert.IsTrue(builder.Headers.ContainsKey("Authorization"));
+        Assert.IsTrue(builder.Headers["Authorization"] == "Bearer token");
+    }
+
+    [TestMethod]
     public async Task Call_HandlesValidRequest()
     {
         // Arrange
