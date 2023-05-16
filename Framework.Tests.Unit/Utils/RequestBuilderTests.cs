@@ -103,7 +103,7 @@ public class RequestBuilderTests
         // Assert
         Assert.AreEqual(1, builder.Headers.Count);
         Assert.IsTrue(builder.Headers.ContainsKey("Authorization"));
-        Assert.IsTrue(builder.Headers["Authorization"] == "Bearer token");
+        Assert.AreEqual("Bearer token", builder.Headers["Authorization"]);
     }
 
     [TestMethod]

@@ -66,7 +66,7 @@ public class RequestBuilder
     /// <returns>This builder</returns>
     public RequestBuilder AddBearerAuthorizationHeader(string token)
     {
-        return AddHeader("Authorization", $"Bearer ${token}");
+        return AddHeader("Authorization", $"Bearer {token}");
     }
 
     /// <summary>

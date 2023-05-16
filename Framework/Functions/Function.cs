@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Semifinals.Framework.Utils.Exceptions;
 using Semifinals.Utils.Tokens;
 
 namespace Semifinals.Framework;
@@ -98,7 +99,7 @@ public class Function<T1, T2>
     public static async Task<T1> ValidateBody(HttpRequest req)
     {
         // Read body of request
-        string requestBody = await new StreamReader(req.Body).ReadToEndAsync(); // TODO: Check how this interacts with no body present
+        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
         if (requestBody == "null")
             throw new ArgumentNullException(nameof(req));
@@ -187,11 +188,13 @@ public class Function<T1, T2>
             }
             catch (ValidationException ex)
             {
-                return new BadRequestObjectResult(ex.Errors.Select(err => err.ErrorMessage));
+                return new BadRequestObjectResult(
+                    ex.Errors.Select(err => ValidationErrorResult.FromFailure(err)));
             }
             catch (ArgumentNullException ex)
             {
-                return new BadRequestObjectResult(new string[] { ex.Message });
+                return new BadRequestObjectResult(
+                    new ValidationErrorResult[] { new("F000", ex.Message) });
             }
 
             // Validate the request params
@@ -203,7 +206,8 @@ public class Function<T1, T2>
             }
             catch (ValidationException ex)
             {
-                return new BadRequestObjectResult(ex.Errors.Select(err => err.ErrorMessage));
+                return new BadRequestObjectResult(
+                    ex.Errors.Select(err => ValidationErrorResult.FromFailure(err)));
             }
 
             // Verify the user

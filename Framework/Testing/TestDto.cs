@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Newtonsoft.Json;
+using Semifinals.Framework.Utils.Exceptions;
 using System.Text.RegularExpressions;
 
 namespace Semifinals.Framework.Testing;
@@ -15,7 +16,8 @@ public class TestBodyDto : Dto, IBodyDto
     public override IDtoValidator Validator { get; } = new DtoValidator<TestBodyDto>(validator =>
     {
         validator.RuleFor(x => x.Nonce)
-            .Matches(new Regex("nonce"));
+            .Matches(new Regex("nonce"))
+            .SetError("F010", "Invalid test nonce");
     });
 }
 
@@ -30,6 +32,7 @@ public class TestParamDto : Dto, IParamDto
     public override IDtoValidator Validator { get; } = new DtoValidator<TestParamDto>(validator =>
     {
         validator.RuleFor(x => x.Nonce)
-            .Matches(new Regex("nonce"));
+            .Matches(new Regex("nonce"))
+            .SetError("F010", "Invalid test nonce");
     });
 }
