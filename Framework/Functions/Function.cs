@@ -98,18 +98,34 @@ public class Function<T1, T2>
     /// <exception cref="ValidationException">Occurs when validation fails</exception>
     public static async Task<T1> ValidateBody(HttpRequest req)
     {
-        // Read body of request
-        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-
-        if (requestBody == "null")
-            throw new ArgumentNullException(nameof(req));
-
-        JObject body = JsonConvert.DeserializeObject<JObject>(requestBody, new JsonSerializerSettings
+        string requestBody;
+        try
         {
-            DateParseHandling = DateParseHandling.None,
-            NullValueHandling = NullValueHandling.Ignore
-        })!;
-        T1 parsedBody = body.ToObject<T1>()!;
+            // Read body of request
+            requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            
+            if (requestBody == "null")
+                throw new Exception();
+        }
+        catch (Exception)
+        {
+            throw new ArgumentNullException(nameof(req));
+        }
+
+        T1 parsedBody;
+        try {
+            JObject body = JsonConvert.DeserializeObject<JObject>(requestBody, new JsonSerializerSettings
+            {
+                DateParseHandling = DateParseHandling.None,
+                NullValueHandling = NullValueHandling.Ignore
+            })!;
+
+            parsedBody = body.ToObject<T1>()!;
+        }
+        catch (Exception)
+        {
+            throw new ArgumentException();
+        }
 
         // Validate DTO
         ValidationResult res = parsedBody.Validator.Test(parsedBody);
@@ -196,6 +212,11 @@ public class Function<T1, T2>
                 return new BadRequestObjectResult(
                     new ValidationErrorResult[] { new("F000", ex.Message) });
             }
+            catch (ArgumentException)
+            {
+                return new BadRequestObjectResult(
+                    new ValidationErrorResult[] { new("F001", "Validation passed on an invalid body") });
+            }
 
             // Validate the request params
             T2 parsedParams;
@@ -254,7 +275,8 @@ public class Function<T1> : Function<T1, NoParamDto>
         body,
         new NoParamDto(),
         requiresAuth,
-        requiresFlags) { }
+        requiresFlags)
+    { }
 }
 
 /// <summary>
