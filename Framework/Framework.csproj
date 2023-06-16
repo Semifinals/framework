@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Semifinals.Framework</PackageId>
-	  <Version>3.3.1</Version>
+	<Version>3.4.0</Version>
     <AssemblyName>Semifinals.Framework</AssemblyName>
     <RootNamespace>Semifinals.Framework</RootNamespace>
     <Company>Semifinals</Company>

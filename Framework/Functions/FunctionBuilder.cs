@@ -38,14 +38,12 @@ public class FunctionBuilder<T1, T2>
     /// <param name="req">The HTTP request for the trigger</param>
     /// <param name="requiresAuth">Whether or not authentication is required</param>
     /// <param name="requiresFlags">The user permissions necessary for the function</param>
-    /// <param name="tokenSecret">The secret used to encrypt tokens</param>
     /// <returns>A function that can be called with a callback to handle requests</returns>
     public Func<Func<Function<T1, T2>, Task<IActionResult>>, Task<IActionResult>> Build(
         HttpRequest req,
-        bool requiresAuth = false,
-        int requiresFlags = 0)
+        bool requiresAuth = false)
     {
-        return Function<T1, T2>.Run(req, requiresAuth, requiresFlags);
+        return Function<T1, T2>.Run(req, requiresAuth);
     }
 }
 

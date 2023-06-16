@@ -23,11 +23,6 @@ public class Function<T1, T2>
     public readonly bool RequiresAuth;
 
     /// <summary>
-    /// The necessary permission flags for a user to have to call the function.
-    /// </summary>
-    public readonly int RequiresFlags;
-
-    /// <summary>
     /// The authenticated user of the request if present.
     /// </summary>
     public readonly string? User;
@@ -56,15 +51,10 @@ public class Function<T1, T2>
         HttpRequest req,
         T1 body,
         T2 parameters,
-        bool requiresAuth,
-        int requiresFlags)
+        bool requiresAuth)
     {
-        if (Environment.GetEnvironmentVariable("TokenSecret") is null)
-            throw new MissingTokenSecretException();
-
         // Assign auth and flags
-        RequiresAuth = (requiresFlags > 0) || requiresAuth;
-        RequiresFlags = requiresFlags;
+        RequiresAuth = requiresAuth;
 
         // Assign HTTP request properties to function
         if (Enum.TryParse(req.Method.ToUpper(), out HttpMethod method))
@@ -83,9 +73,7 @@ public class Function<T1, T2>
 
             if (authorizationHeader.StartsWith("Bearer "))
             {
-                string token = authorizationHeader[7..];
-                if (Token.Verify(token, Environment.GetEnvironmentVariable("TokenSecret")!))
-                    User = token;
+                User = authorizationHeader[7..];
             }
         }
     }
@@ -171,11 +159,6 @@ public class Function<T1, T2>
         // Require a user exist if the function requires auth
         if (func.RequiresAuth && func.User == null)
             throw new UnauthorizedException();
-
-        // Require that the user has all necessary user flags
-        int userFlags = 0; // TODO: Get user flags from separate API
-        if (func.User != null && (userFlags & func.RequiresFlags) != func.RequiresFlags)
-            throw new ForbiddenException();
     }
 
     /// <summary>
@@ -187,8 +170,7 @@ public class Function<T1, T2>
     /// <returns>A callback function to call with the function accessible</returns>
     public static Func<Func<Function<T1, T2>, Task<IActionResult>>, Task<IActionResult>> Run(
         HttpRequest req,
-        bool requiresAuth = false,
-        int requiresFlags = 0)
+        bool requiresAuth = false)
     {
         return new(async callback =>
         {
@@ -236,8 +218,7 @@ public class Function<T1, T2>
                 req,
                 parsedBody!,
                 parsedParams,
-                requiresAuth,
-                requiresFlags);
+                requiresAuth);
 
             try
             {
@@ -268,14 +249,12 @@ public class Function<T1> : Function<T1, NoParamDto>
     public Function(
         HttpRequest req,
         T1 body,
-        bool requiresAuth,
-        int requiresFlags)
+        bool requiresAuth)
     : base(
         req,
         body,
         new NoParamDto(),
-        requiresAuth,
-        requiresFlags)
+        requiresAuth)
     { }
 }
 
@@ -286,13 +265,11 @@ public class Function : Function<NoBodyDto, NoParamDto>
 {
     public Function(
         HttpRequest req,
-        bool requiresAuth,
-        int requiresFlags)
+        bool requiresAuth)
     : base(
         req,
         new NoBodyDto(),
         new NoParamDto(),
-        requiresAuth,
-        requiresFlags)
+        requiresAuth)
     { }
 }

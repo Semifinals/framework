@@ -10,12 +10,6 @@ namespace Semifinals.Framework.Tests.E2E;
 [TestClass]
 public class FunctionTests : Test
 {
-    [TestInitialize]
-    public void InitializeTests()
-    {
-        Environment.SetEnvironmentVariable("TokenSecret", "secret");
-    }
-
     [TestMethod]
     public async Task Constructor_BuildsCorrectly()
     {
@@ -34,14 +28,12 @@ public class FunctionTests : Test
         HttpRequest req = await CreateRequest(bodyDto, method, authorizationHeader);
 
         bool requiresAuth = true;
-        int requiresFlags = 1;
 
         // Act
-        Function<TestBodyDto, TestParamDto> func = new(req, bodyDto, paramDto, requiresAuth, requiresFlags);
+        Function<TestBodyDto, TestParamDto> func = new(req, bodyDto, paramDto, requiresAuth);
 
         // Assert
         Assert.AreEqual(requiresAuth, func.RequiresAuth);
-        Assert.AreEqual(requiresFlags, func.RequiresFlags);
         Assert.AreEqual(method, func.Method);
         Assert.IsInstanceOfType(func.Body, typeof(TestBodyDto));
         Assert.IsInstanceOfType(func.Params, typeof(TestParamDto));
@@ -136,7 +128,7 @@ public class FunctionTests : Test
     {
         // Arrange
         HttpRequest req = await CreateRequest<NoBodyDto>(new());
-        Function func = new(req, false, 0);
+        Function func = new(req, false);
 
         // Act
         Function.VerifyUser(func);
@@ -152,7 +144,7 @@ public class FunctionTests : Test
         string token = "dGVzdA==.ODY0MDA=.iNsbhu5s1rdoPT960fY0Bu7sQAaaP2ysD3RJS9DQUmg=";
         string authorizationHeader = $"Bearer {token}";
         HttpRequest req = await CreateRequest<NoBodyDto>(new(), authorizationHeader: authorizationHeader);
-        Function func = new(req, true, 0);
+        Function func = new(req, true);
 
         // Act
         Function.VerifyUser(func);
@@ -166,7 +158,7 @@ public class FunctionTests : Test
     {
         // Arrange
         HttpRequest req = await CreateRequest<NoBodyDto>(new());
-        Function func = new(req, true, 0);
+        Function func = new(req, true);
 
         // Act
         void res() => Function.VerifyUser(func);
@@ -175,44 +167,12 @@ public class FunctionTests : Test
         Assert.ThrowsException<UnauthorizedException>(res);
     }
 
-    //[TestMethod]
-    //public async Task VerifyUser_WithFlags_AcceptsValid()
-    //{
-    //    // Arrange
-    //    string token = "dGVzdA==.ODY0MDA=.iNsbhu5s1rdoPT960fY0Bu7sQAaaP2ysD3RJS9DQUmg=";
-    //    string authorizationHeader = $"Bearer {token}";
-    //    HttpRequest req = await CreateRequest<NoBodyDto>(new(), authorizationHeader: authorizationHeader);
-    //    Function func = new(req, true, 1, "secret");
-
-    //    // Act
-    //    Function.VerifyUser(func);
-
-    //    // Assert
-    //    Assert.IsTrue(true);
-    //}
-
-    //[TestMethod]
-    //public async Task VerifyUser_WithFlags_RejectsInvalid()
-    //{
-    //    // Arrange
-    //    string token = "dGVzdA==.ODY0MDA=.iNsbhu5s1rdoPT960fY0Bu7sQAaaP2ysD3RJS9DQUmg=";
-    //    string authorizationHeader = $"Bearer {token}";
-    //    HttpRequest req = await CreateRequest<NoBodyDto>(new(), authorizationHeader: authorizationHeader);
-    //    Function func = new(req, true, 1, "secret");
-
-    //    // Act
-    //    void res() => Function.VerifyUser(func);
-
-    //    // Assert
-    //    Assert.ThrowsException<ForbiddenException>(res);
-    //}
-
     [TestMethod]
     public async Task Run_RunsCallback()
     {
         // Arrange
         HttpRequest req = await CreateRequest<NoBodyDto>(new());
-        Function func = new(req, false, 0);
+        Function func = new(req, false);
 
         // Act
         IActionResult res = await Function.Run(req)(async func =>
