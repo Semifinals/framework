@@ -101,7 +101,8 @@ public class Function<T1, T2>
         }
 
         T1 parsedBody;
-        try {
+        try
+        {        
             JObject body = JsonConvert.DeserializeObject<JObject>(requestBody, new JsonSerializerSettings
             {
                 DateParseHandling = DateParseHandling.None,
@@ -110,13 +111,17 @@ public class Function<T1, T2>
 
             parsedBody = body.ToObject<T1>()!;
         }
-        catch (Exception)
+        catch (JsonSerializationException ex)
         {
-            throw new ArgumentException();
+            throw new ValidationException(new()
+            {
+                new(ex.Source, ex.Message)
+            });
         }
 
         // Validate DTO
         ValidationResult res = parsedBody.Validator.Test(parsedBody);
+        
         if (!res.IsValid)
             throw new ValidationException(res.Errors);
 
@@ -193,11 +198,6 @@ public class Function<T1, T2>
             {
                 return new BadRequestObjectResult(
                     new ValidationErrorResult[] { new("F000", ex.Message) });
-            }
-            catch (ArgumentException)
-            {
-                return new BadRequestObjectResult(
-                    new ValidationErrorResult[] { new("F001", "Validation passed on an invalid body") });
             }
 
             // Validate the request params

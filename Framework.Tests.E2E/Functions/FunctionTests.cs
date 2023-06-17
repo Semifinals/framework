@@ -73,6 +73,39 @@ public class FunctionTests : Test
     }
 
     [TestMethod]
+    public async Task ValidateBody_AcceptsNullOnNullableBool()
+    {
+        // Arrange
+        HttpRequest req = await CreateRequest(new NonNullableBoolBodyDto
+        {
+            Bool = true
+        });
+
+        // Act
+        NullableBoolBodyDto res = await Function<NullableBoolBodyDto>.ValidateBody(req);
+
+        // Assert
+        Assert.IsInstanceOfType(res, typeof(NullableBoolBodyDto));
+        Assert.AreEqual(true, res.Bool);
+    }
+
+    [TestMethod]
+    public async Task ValidateBody_RejectsNullOnNonNullableBool()
+    {
+        // Arrange
+        HttpRequest req = await CreateRequest(new NullableBoolBodyDto
+        {
+            Bool = null
+        });
+        
+        // Act
+        async Task<NonNullableBoolBodyDto> res() => await Function<NonNullableBoolBodyDto>.ValidateBody(req);
+
+        // Assert
+        await Assert.ThrowsExceptionAsync<ValidationException>(res);
+    }
+
+    [TestMethod]
     public async Task ValidateParams_AcceptsValid()
     {
         // Arrange
@@ -207,5 +240,30 @@ public class TestParamDto : Dto, IParamDto
         validator.RuleFor(x => x.nonce)
             .NotNull()
             .NotEmpty();
+    });
+}
+
+public class NullableBoolBodyDto : Dto, IBodyDto
+{
+    public bool? Bool;
+
+    public override IDtoValidator Validator { get; } = new DtoValidator<NullableBoolBodyDto>(validator =>
+    {
+        validator.When(x => x.Bool != null, () =>
+        {
+            validator.RuleFor(x => x.Bool)
+                .NotNull();
+        });
+    });
+}
+
+public class NonNullableBoolBodyDto : Dto, IBodyDto
+{
+    public bool Bool;
+
+    public override IDtoValidator Validator { get; } = new DtoValidator<NonNullableBoolBodyDto>(validator =>
+    {
+        validator.RuleFor(x => x.Bool)
+            .NotNull();
     });
 }
